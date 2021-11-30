@@ -216,3 +216,239 @@ body {
 .editor-empty__icon {
   font-size: 3rem;
 }
+
+/* ===== Note cards (built by JavaScript) ===== */
+.note-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font: inherit;
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.note-card:hover {
+  border-color: var(--color-primary);
+}
+
+.note-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* The note open in the editor */
+.note-card[aria-current="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.note-card__title {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Show at most two lines of the note, then "…" */
+.note-card__preview {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.note-card__date {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+/* Search matches (Step 11) */
+mark {
+  background: var(--color-highlight);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+/* ===== Editor ===== */
+.editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space) calc(var(--space) * 2) calc(var(--space) * 2);
+}
+
+.editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: var(--space);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* The back button is only for the phone layout */
+.editor__back {
+  display: none;
+}
+
+.editor__meta {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-status:not(:empty)::before {
+  content: " · ";
+}
+
+.editor__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editor__title,
+.editor__body {
+  width: 100%;
+  font: inherit;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.editor__title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  padding: var(--space) 0 0.5rem;
+}
+
+.editor__body {
+  flex: 1;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  resize: none;
+}
+
+.editor__title:focus,
+.editor__body:focus {
+  outline: none;
+}
+
+.editor__title::placeholder,
+.editor__body::placeholder {
+  color: var(--color-muted);
+  opacity: 0.7;
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--space) * 1.5);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: 0.7rem 0.8rem 0.7rem 1.1rem;
+  border-radius: var(--radius);
+  background: #1f1f1f;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: toast-in 0.2s ease-out;
+}
+
+.toast__action {
+  font: inherit;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: #fbbf24;
+  cursor: pointer;
+}
+
+.toast__action:hover,
+.toast__action:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+/* ===== Phone layout: list and editor take turns ===== */
+@media (max-width: 720px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+  }
+
+  /* Showing the list (default): hide the editor panel */
+  .app:not(.is-editing) .editor-panel {
+    display: none;
+  }
+
+  /* Editing a note (JavaScript adds .is-editing): hide the list */
+  .app.is-editing .sidebar {
+    display: none;
+  }
+
+  .editor__back {
+    display: inline-block;
+  }
+
+  .editor {
+    padding: 0.75rem var(--space) var(--space);
+  }
+
+  .editor__toolbar {
+    gap: 0.5rem;
+  }
+
+  .editor__title {
+    font-size: 1.4rem;
+  }
+
+  .toast {
+    left: var(--space);
+    right: var(--space);
+    transform: none;
+    justify-content: space-between;
+  }
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+  }
+}
