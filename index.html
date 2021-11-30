@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar: search and the list of notes -->
+    <aside class="sidebar" aria-label="Notes">
+      <header class="sidebar__header">
+        <h1 class="sidebar__title">Notes</h1>
+        <button type="button" id="new-note-btn" class="btn btn--primary">+ New note</button>
+      </header>
+
+      <div class="search">
+        <label for="search-input" class="visually-hidden">Search notes</label>
+        <input type="search" id="search-input" class="search__input"
+               placeholder="Search notes…" autocomplete="off">
+      </div>
+
+      <p id="notes-count" class="sidebar__count" aria-live="polite">0 notes</p>
+
+      <ul id="notes-list" class="notes-list" aria-label="All notes"></ul>
+
+      <p id="list-empty" class="list-empty">No notes yet. Create your first one!</p>
+    </aside>
+
+    <!-- Editor -->
+    <main class="editor-panel">
+      <!-- Shown when no note is selected -->
+      <div id="editor-empty" class="editor-empty">
+        <span class="editor-empty__icon" aria-hidden="true">📝</span>
+        <p>Select a note, or create a new one.</p>
+      </div>
+
+      <article id="editor" class="editor" aria-label="Note editor" hidden>
+        <div class="editor__toolbar">
+          <!-- Only visible on phones, where the list and editor take turns -->
+          <button type="button" id="back-btn" class="btn btn--ghost editor__back">← Notes</button>
+
+          <p class="editor__meta">
+            <span id="editor-meta">Edited just now</span>
+            <span id="save-status" class="save-status" aria-live="polite"></span>
+          </p>
+
+          <div class="editor__actions">
+            <button type="button" id="pin-btn" class="btn btn--ghost" aria-pressed="false">📌 Pin</button>
+            <button type="button" id="delete-btn" class="btn btn--danger">Delete</button>
+          </div>
+        </div>
+
+        <label for="note-title" class="visually-hidden">Title</label>
+        <input type="text" id="note-title" class="editor__title"
+               placeholder="Title" maxlength="120" autocomplete="off">
+
+        <label for="note-body" class="visually-hidden">Note</label>
+        <textarea id="note-body" class="editor__body" placeholder="Start writing…"></textarea>
+      </article>
+    </main>
+  </div>
+
+  <!-- "Note deleted · Undo" message -->
+  <div id="toast" class="toast" role="status" hidden>
+    <span id="toast-message"></span>
+    <button type="button" id="undo-btn" class="toast__action">Undo</button>
+  </div>
+</body>
+</html>
