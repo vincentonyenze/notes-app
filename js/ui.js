@@ -86,3 +86,12 @@ export function renderEditor(note) {
 export function renderSaveStatus(status) {
   elements.saveStatus.textContent = SAVE_STATUS_TEXT[status];
 }
+
+export function showToast(message) {
+  elements.toastMessage.textContent = message;
+  elements.toast.hidden = false;
+}
+
+export function hideToast() {
+  elements.toast.hidden = true;
+}

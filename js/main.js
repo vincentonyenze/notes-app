@@ -8,11 +8,24 @@ import {
   createNote,
   selectNote,
   updateNote,
+  deleteNote,
+  undoDelete,
+  forgetDeleted,
   getState,
   getSelectedNote,
   flushSave,
 } from "./notes.js";
-import { renderList, renderEditor, renderSaveStatus } from "./ui.js";
+import {
+  renderList,
+  renderEditor,
+  renderSaveStatus,
+  showToast,
+  hideToast,
+} from "./ui.js";
+
+// How long the "Undo" option stays on screen after deleting
+const UNDO_TIME_MS = 5000;
+let toastTimeoutId = null;
 
 // ===== Rendering =====
 function render(state) {
@@ -49,11 +62,38 @@ function handleEditorInput(event) {
   }
 }
 
+// No "Are you sure?" popup: delete straight away and offer Undo instead
+function handleDelete() {
+  const { selectedId } = getState();
+  if (!selectedId) return;
+
+  deleteNote(selectedId);
+  showToast("Note deleted");
+
+  // Deleting again restarts the countdown (only the latest delete can be undone)
+  clearTimeout(toastTimeoutId);
+  toastTimeoutId = setTimeout(closeToast, UNDO_TIME_MS);
+}
+
+function handleUndo() {
+  undoDelete();
+  closeToast();
+  elements.titleInput.focus();
+}
+
+function closeToast() {
+  clearTimeout(toastTimeoutId);
+  hideToast();
+  forgetDeleted();
+}
+
 // ===== Init =====
 elements.newNoteBtn.addEventListener("click", handleNewNote);
 elements.notesList.addEventListener("click", handleListClick);
 elements.backBtn.addEventListener("click", handleBack);
 elements.editor.addEventListener("input", handleEditorInput);
+elements.deleteBtn.addEventListener("click", handleDelete);
+elements.undoBtn.addEventListener("click", handleUndo);
 
 // Don't lose the last few keystrokes if the tab is closed or hidden
 // before the debounced save runs

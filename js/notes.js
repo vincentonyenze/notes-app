@@ -85,6 +85,49 @@ export function updateNote(id, changes) {
   persistSoon(); // ...but save only once typing pauses
 }
 
+// The most recently deleted note and where it was, so it can be undone.
+// Kept outside `state` because nothing on screen is drawn from it.
+let lastDeleted = null; // { note, index } or null
+
+export function deleteNote(id) {
+  const index = state.notes.findIndex((note) => note.id === id);
+  if (index === -1) return;
+
+  // Finish any waiting save first, so it can't run after the delete
+  persistSoon.flush();
+  lastDeleted = { note: state.notes[index], index };
+
+  state.notes = state.notes.filter((note) => note.id !== id);
+  if (state.selectedId === id) {
+    state.selectedId = null;
+  }
+  persist();
+  notify();
+}
+
+// Put the last deleted note back in the same spot and open it
+export function undoDelete() {
+  if (!lastDeleted) return;
+
+  const { note, index } = lastDeleted;
+  lastDeleted = null;
+
+  // slice() copies, so this builds a new array around the restored note
+  state.notes = [
+    ...state.notes.slice(0, index),
+    note,
+    ...state.notes.slice(index),
+  ];
+  state.selectedId = note.id;
+  persist();
+  notify();
+}
+
+// Called when the undo toast goes away: the delete is now final
+export function forgetDeleted() {
+  lastDeleted = null;
+}
+
 // Pass null to close the editor
 export function selectNote(id) {
   // Finish saving the note we're leaving before opening another
