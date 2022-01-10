@@ -1,12 +1,16 @@
 // The notes "store": holds the app's data and every way to change it.
 // It knows nothing about HTML. When something changes it tells its
 // subscribers, and they decide how to show it.
-import { createId } from "./utils.js";
+import { createId, debounce } from "./utils.js";
 import { saveNotes } from "./storage.js";
+
+// Wait this long after the last keystroke before saving
+const SAVE_DELAY_MS = 500;
 
 const state = {
   notes: [],
   selectedId: null, // the note open in the editor, or null
+  saveStatus: "idle", // "idle" | "saving" | "saved" | "error"
 };
 
 // ===== Subscribers =====
@@ -32,7 +36,19 @@ export function getSelectedNote() {
 
 // ===== Changing =====
 function persist() {
-  saveNotes(state.notes);
+  const saved = saveNotes(state.notes);
+  state.saveStatus = saved ? "saved" : "error";
+}
+
+// While typing, save once the user pauses instead of on every key
+const persistSoon = debounce(() => {
+  persist();
+  notify();
+}, SAVE_DELAY_MS);
+
+// Save anything still waiting right now (used when the page is closing)
+export function flushSave() {
+  persistSoon.flush();
 }
 
 export function initNotes(notes) {
@@ -59,8 +75,21 @@ export function createNote() {
   return note;
 }
 
+// changes: the fields to update, e.g. { title: "Shopping" }
+export function updateNote(id, changes) {
+  state.notes = state.notes.map((note) =>
+    note.id === id ? { ...note, ...changes, updatedAt: Date.now() } : note
+  );
+  state.saveStatus = "saving";
+  notify(); // update the list straight away...
+  persistSoon(); // ...but save only once typing pauses
+}
+
 // Pass null to close the editor
 export function selectNote(id) {
+  // Finish saving the note we're leaving before opening another
+  persistSoon.flush();
   state.selectedId = id;
+  state.saveStatus = "idle";
   notify();
 }

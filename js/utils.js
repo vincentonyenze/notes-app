@@ -4,3 +4,31 @@
 export function createId() {
   return crypto.randomUUID();
 }
+
+// Wait until calls stop for `delayMs`, then run `fn` once with the
+// latest arguments. Typing 20 letters quickly = 1 call, not 20.
+// debounced.flush() runs a waiting call right now (e.g. before the page closes).
+export function debounce(fn, delayMs) {
+  let timeoutId = null;
+  let lastArgs = [];
+
+  function run() {
+    timeoutId = null;
+    fn(...lastArgs);
+  }
+
+  function debounced(...args) {
+    lastArgs = args;
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(run, delayMs);
+  }
+
+  debounced.flush = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      run();
+    }
+  };
+
+  return debounced;
+}

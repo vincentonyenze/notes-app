@@ -5,6 +5,13 @@ import { elements } from "./dom.js";
 const UNTITLED = "Untitled note";
 const NO_TEXT = "No additional text";
 
+const SAVE_STATUS_TEXT = {
+  idle: "",
+  saving: "Saving…",
+  saved: "Saved",
+  error: "⚠️ Couldn't save. Storage may be full.",
+};
+
 // First line of the body that has something in it
 function getPreview(body) {
   const firstLine = body.split("\n").find((line) => line.trim() !== "");
@@ -74,4 +81,8 @@ export function renderEditor(note) {
     elements.bodyInput.value = note.body;
   }
   elements.editorMeta.textContent = `Edited ${formatDate(note.updatedAt)}`;
+}
+
+export function renderSaveStatus(status) {
+  elements.saveStatus.textContent = SAVE_STATUS_TEXT[status];
 }
