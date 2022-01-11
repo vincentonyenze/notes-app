@@ -257,6 +257,13 @@ body {
   white-space: nowrap;
 }
 
+/* The text after "/" is what screen readers say instead of the emoji.
+   Browsers that don't understand it use the first line. */
+.note-card--pinned .note-card__title::before {
+  content: "📌 ";
+  content: "📌 " / "Pinned: ";
+}
+
 /* Show at most two lines of the note, then "…" */
 .note-card__preview {
   font-size: 0.85rem;

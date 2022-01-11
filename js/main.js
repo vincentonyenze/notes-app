@@ -11,7 +11,9 @@ import {
   deleteNote,
   undoDelete,
   forgetDeleted,
+  togglePin,
   getState,
+  getSortedNotes,
   getSelectedNote,
   flushSave,
 } from "./notes.js";
@@ -29,7 +31,7 @@ let toastTimeoutId = null;
 
 // ===== Rendering =====
 function render(state) {
-  renderList(state.notes, state.selectedId);
+  renderList(getSortedNotes(), state.selectedId);
   renderEditor(getSelectedNote());
   renderSaveStatus(state.saveStatus);
 }
@@ -62,6 +64,12 @@ function handleEditorInput(event) {
   }
 }
 
+function handlePin() {
+  const { selectedId } = getState();
+  if (!selectedId) return;
+  togglePin(selectedId);
+}
+
 // No "Are you sure?" popup: delete straight away and offer Undo instead
 function handleDelete() {
   const { selectedId } = getState();
@@ -92,6 +100,7 @@ elements.newNoteBtn.addEventListener("click", handleNewNote);
 elements.notesList.addEventListener("click", handleListClick);
 elements.backBtn.addEventListener("click", handleBack);
 elements.editor.addEventListener("input", handleEditorInput);
+elements.pinBtn.addEventListener("click", handlePin);
 elements.deleteBtn.addEventListener("click", handleDelete);
 elements.undoBtn.addEventListener("click", handleUndo);
 

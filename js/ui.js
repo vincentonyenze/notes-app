@@ -29,6 +29,7 @@ function createNoteCard(note, selectedId) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "note-card";
+  button.classList.toggle("note-card--pinned", note.pinned);
   button.dataset.id = note.id;
   if (note.id === selectedId) {
     button.setAttribute("aria-current", "true");
@@ -81,6 +82,10 @@ export function renderEditor(note) {
     elements.bodyInput.value = note.body;
   }
   elements.editorMeta.textContent = `Edited ${formatDate(note.updatedAt)}`;
+
+  // aria-pressed tells screen readers (and our CSS) it's an on/off button
+  elements.pinBtn.setAttribute("aria-pressed", String(note.pinned));
+  elements.pinBtn.textContent = note.pinned ? "📌 Pinned" : "📌 Pin";
 }
 
 export function renderSaveStatus(status) {

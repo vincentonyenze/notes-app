@@ -34,6 +34,21 @@ export function getSelectedNote() {
   return state.notes.find((note) => note.id === state.selectedId) ?? null;
 }
 
+// Pinned notes first, then the most recently edited.
+// A negative result puts `a` before `b`, a positive one puts it after.
+function compareNotes(a, b) {
+  if (a.pinned !== b.pinned) {
+    return a.pinned ? -1 : 1;
+  }
+  return b.updatedAt - a.updatedAt;
+}
+
+// The order is worked out from the data every time it's needed, not
+// stored. sort() changes the array it's called on, so copy it first.
+export function getSortedNotes() {
+  return [...state.notes].sort(compareNotes);
+}
+
 // ===== Changing =====
 function persist() {
   const saved = saveNotes(state.notes);
@@ -83,6 +98,15 @@ export function updateNote(id, changes) {
   state.saveStatus = "saving";
   notify(); // update the list straight away...
   persistSoon(); // ...but save only once typing pauses
+}
+
+// Pinning doesn't change updatedAt: it isn't an edit to the note
+export function togglePin(id) {
+  state.notes = state.notes.map((note) =>
+    note.id === id ? { ...note, pinned: !note.pinned } : note
+  );
+  persist();
+  notify();
 }
 
 // The most recently deleted note and where it was, so it can be undone.
