@@ -11,6 +11,7 @@ const state = {
   notes: [],
   selectedId: null, // the note open in the editor, or null
   saveStatus: "idle", // "idle" | "saving" | "saved" | "error"
+  searchQuery: "",
 };
 
 // ===== Subscribers =====
@@ -47,6 +48,25 @@ function compareNotes(a, b) {
 // stored. sort() changes the array it's called on, so copy it first.
 export function getSortedNotes() {
   return [...state.notes].sort(compareNotes);
+}
+
+// Case-insensitive: "MILK" finds "Buy milk"
+function matchesSearch(note, query) {
+  const text = `${note.title}\n${note.body}`.toLowerCase();
+  return text.includes(query.toLowerCase());
+}
+
+// The notes the list should show: sorted, then narrowed by the search
+export function getVisibleNotes() {
+  const query = state.searchQuery.trim();
+  const sorted = getSortedNotes();
+  if (query === "") return sorted;
+  return sorted.filter((note) => matchesSearch(note, query));
+}
+
+export function setSearchQuery(query) {
+  state.searchQuery = query;
+  notify();
 }
 
 // ===== Changing =====

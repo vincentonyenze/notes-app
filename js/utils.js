@@ -5,6 +5,12 @@ export function createId() {
   return crypto.randomUUID();
 }
 
+// Put a backslash before characters that mean something special in a
+// regular expression, so searching for "c++" or "$5" matches literally.
+export function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // Wait until calls stop for `delayMs`, then run `fn` once with the
 // latest arguments. Typing 20 letters quickly = 1 call, not 20.
 // debounced.flush() runs a waiting call right now (e.g. before the page closes).

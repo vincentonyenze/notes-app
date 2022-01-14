@@ -1,9 +1,11 @@
 // Everything that draws on the page. These functions read data and
 // update the DOM; they never change the notes themselves.
 import { elements } from "./dom.js";
+import { escapeRegExp } from "./utils.js";
 
 const UNTITLED = "Untitled note";
 const NO_TEXT = "No additional text";
+const NO_NOTES = "No notes yet. Create your first one!";
 
 const SAVE_STATUS_TEXT = {
   idle: "",
@@ -12,10 +14,34 @@ const SAVE_STATUS_TEXT = {
   error: "⚠️ Couldn't save. Storage may be full.",
 };
 
-// First line of the body that has something in it
-function getPreview(body) {
-  const firstLine = body.split("\n").find((line) => line.trim() !== "");
-  return firstLine?.trim() ?? NO_TEXT;
+// The first line of the body that has something in it. While searching,
+// prefer the first line containing the match, so you can see why it's listed.
+function getPreview(body, query) {
+  const lines = body.split("\n").filter((line) => line.trim() !== "");
+  const lowerQuery = query.toLowerCase();
+  const matchingLine =
+    query && lines.find((line) => line.toLowerCase().includes(lowerQuery));
+  return (matchingLine || lines[0])?.trim() ?? NO_TEXT;
+}
+
+// Turn "Buy milk" + "mil" into: "Buy ", <mark>mil</mark>, "k"
+//
+// This builds real DOM nodes instead of an HTML string. With innerHTML,
+// a note containing <img src=x onerror=alert(1)> would run as code.
+// Text nodes are always shown as plain text, whatever they contain.
+function highlight(text, query) {
+  if (!query) return [text];
+
+  // The ( ) keep the matches in the result of split(), and "i" ignores
+  // case. Matches always land at the odd positions: 1, 3, 5...
+  const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, "i"));
+
+  return parts.map((part, index) => {
+    if (index % 2 === 0) return part; // plain text (a string becomes a text node)
+    const mark = document.createElement("mark");
+    mark.textContent = part;
+    return mark;
+  });
 }
 
 function formatDate(timestamp) {
@@ -25,7 +51,7 @@ function formatDate(timestamp) {
   });
 }
 
-function createNoteCard(note, selectedId) {
+function createNoteCard(note, selectedId, query) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "note-card";
@@ -37,11 +63,11 @@ function createNoteCard(note, selectedId) {
 
   const title = document.createElement("span");
   title.className = "note-card__title";
-  title.textContent = note.title.trim() || UNTITLED;
+  title.append(...highlight(note.title.trim() || UNTITLED, query));
 
   const preview = document.createElement("span");
   preview.className = "note-card__preview";
-  preview.textContent = getPreview(note.body);
+  preview.append(...highlight(getPreview(note.body, query), query));
 
   const date = document.createElement("span");
   date.className = "note-card__date";
@@ -54,14 +80,23 @@ function createNoteCard(note, selectedId) {
   return item;
 }
 
-export function renderList(notes, selectedId) {
+// notes: the notes to show (already sorted and filtered)
+// total: how many notes exist, so we can say "2 of 5 notes"
+export function renderList({ notes, total, selectedId, query }) {
   const count = notes.length;
-  elements.notesCount.textContent = `${count} note${count === 1 ? "" : "s"}`;
+  const noun = `note${total === 1 ? "" : "s"}`;
+  elements.notesCount.textContent = query
+    ? `${count} of ${total} ${noun}`
+    : `${total} ${noun}`;
 
   elements.notesList.replaceChildren(
-    ...notes.map((note) => createNoteCard(note, selectedId))
+    ...notes.map((note) => createNoteCard(note, selectedId, query))
   );
+
+  // Two different empty states: no notes at all, or nothing matches
   elements.listEmpty.hidden = count > 0;
+  elements.listEmpty.textContent =
+    total > 0 ? `No notes match “${query}”.` : NO_NOTES;
 }
 
 export function renderEditor(note) {

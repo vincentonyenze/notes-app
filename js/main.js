@@ -12,8 +12,9 @@ import {
   undoDelete,
   forgetDeleted,
   togglePin,
+  setSearchQuery,
   getState,
-  getSortedNotes,
+  getVisibleNotes,
   getSelectedNote,
   flushSave,
 } from "./notes.js";
@@ -31,13 +32,21 @@ let toastTimeoutId = null;
 
 // ===== Rendering =====
 function render(state) {
-  renderList(getSortedNotes(), state.selectedId);
+  renderList({
+    notes: getVisibleNotes(),
+    total: state.notes.length,
+    selectedId: state.selectedId,
+    query: state.searchQuery.trim(),
+  });
   renderEditor(getSelectedNote());
   renderSaveStatus(state.saveStatus);
 }
 
 // ===== Event handlers =====
 function handleNewNote() {
+  // A new, empty note wouldn't match the search and would vanish from
+  // the list, so clear the search first
+  clearSearch();
   createNote();
   elements.titleInput.focus();
 }
@@ -62,6 +71,23 @@ function handleEditorInput(event) {
   } else if (event.target === elements.bodyInput) {
     updateNote(selectedId, { body: elements.bodyInput.value });
   }
+}
+
+// Filtering a few hundred notes is instant, so there's no need to
+// debounce this the way saving is debounced
+function handleSearch() {
+  setSearchQuery(elements.searchInput.value);
+}
+
+function handleSearchKeydown(event) {
+  if (event.key === "Escape") {
+    clearSearch();
+  }
+}
+
+function clearSearch() {
+  elements.searchInput.value = "";
+  setSearchQuery("");
 }
 
 function handlePin() {
@@ -97,6 +123,8 @@ function closeToast() {
 
 // ===== Init =====
 elements.newNoteBtn.addEventListener("click", handleNewNote);
+elements.searchInput.addEventListener("input", handleSearch);
+elements.searchInput.addEventListener("keydown", handleSearchKeydown);
 elements.notesList.addEventListener("click", handleListClick);
 elements.backBtn.addEventListener("click", handleBack);
 elements.editor.addEventListener("input", handleEditorInput);
