@@ -1,7 +1,7 @@
 // Everything that draws on the page. These functions read data and
 // update the DOM; they never change the notes themselves.
 import { elements } from "./dom.js";
-import { escapeRegExp } from "./utils.js";
+import { escapeRegExp, formatRelativeTime } from "./utils.js";
 
 const UNTITLED = "Untitled note";
 const NO_TEXT = "No additional text";
@@ -44,11 +44,14 @@ function highlight(text, query) {
   });
 }
 
-function formatDate(timestamp) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+// Fill a <time> element. The datetime attribute holds the exact time in a
+// format computers can read; refreshTimes() reads it back later.
+// Hovering shows the full date and time as a tooltip.
+function setTime(element, timestamp) {
+  const date = new Date(timestamp);
+  element.dateTime = date.toISOString();
+  element.title = date.toLocaleString("en-US");
+  element.textContent = formatRelativeTime(timestamp);
 }
 
 function createNoteCard(note, selectedId, query) {
@@ -69,9 +72,9 @@ function createNoteCard(note, selectedId, query) {
   preview.className = "note-card__preview";
   preview.append(...highlight(getPreview(note.body, query), query));
 
-  const date = document.createElement("span");
+  const date = document.createElement("time");
   date.className = "note-card__date";
-  date.textContent = formatDate(note.updatedAt);
+  setTime(date, note.updatedAt);
 
   button.append(title, preview, date);
 
@@ -116,7 +119,7 @@ export function renderEditor(note) {
   if (elements.bodyInput.value !== note.body) {
     elements.bodyInput.value = note.body;
   }
-  elements.editorMeta.textContent = `Edited ${formatDate(note.updatedAt)}`;
+  setTime(elements.editorMeta, note.updatedAt);
 
   // aria-pressed tells screen readers (and our CSS) it's an on/off button
   elements.pinBtn.setAttribute("aria-pressed", String(note.pinned));
@@ -125,6 +128,15 @@ export function renderEditor(note) {
 
 export function renderSaveStatus(status) {
   elements.saveStatus.textContent = SAVE_STATUS_TEXT[status];
+}
+
+// "2 minutes ago" goes out of date even when nothing changes, so this
+// rewrites just the time text. It doesn't rebuild the list, which would
+// lose your place if you were tabbing through the notes.
+export function refreshTimes() {
+  document.querySelectorAll("time[datetime]").forEach((element) => {
+    element.textContent = formatRelativeTime(Date.parse(element.dateTime));
+  });
 }
 
 export function showToast(message) {

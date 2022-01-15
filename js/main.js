@@ -24,7 +24,11 @@ import {
   renderSaveStatus,
   showToast,
   hideToast,
+  refreshTimes,
 } from "./ui.js";
+
+// How often "5 minutes ago" texts are brought up to date
+const TIME_REFRESH_MS = 30_000;
 
 // How long the "Undo" option stays on screen after deleting
 const UNDO_TIME_MS = 5000;
@@ -136,8 +140,15 @@ elements.undoBtn.addEventListener("click", handleUndo);
 // before the debounced save runs
 window.addEventListener("pagehide", flushSave);
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) flushSave();
+  if (document.hidden) {
+    flushSave();
+  } else {
+    // Browsers slow down timers in background tabs, so catch up on return
+    refreshTimes();
+  }
 });
+
+setInterval(refreshTimes, TIME_REFRESH_MS);
 
 // Subscribe first, so loading the notes triggers the first render
 subscribe(render);
