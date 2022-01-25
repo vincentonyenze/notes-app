@@ -156,6 +156,9 @@ export function undoDelete() {
   const { note, index } = lastDeleted;
   lastDeleted = null;
 
+  // Another tab may have brought it back already. Don't add it twice.
+  if (state.notes.some((existing) => existing.id === note.id)) return;
+
   // slice() copies, so this builds a new array around the restored note
   state.notes = [
     ...state.notes.slice(0, index),
@@ -170,6 +173,28 @@ export function undoDelete() {
 // Called when the undo toast goes away: the delete is now final
 export function forgetDeleted() {
   lastDeleted = null;
+}
+
+// Another tab saved, and these are its notes. Use them, with one exception:
+// if the note open here has newer edits that haven't been saved yet, keep
+// ours. Otherwise the other tab would wipe out what you just typed.
+export function syncNotes(incoming) {
+  const local = getSelectedNote();
+
+  state.notes = incoming.map((note) =>
+    local && note.id === local.id && local.updatedAt > note.updatedAt
+      ? local
+      : note
+  );
+
+  // The open note was deleted in the other tab, so close the editor
+  if (!state.notes.some((note) => note.id === state.selectedId)) {
+    state.selectedId = null;
+  }
+
+  // No persist() here: the other tab has already saved these notes. If we
+  // kept newer edits, the save that's already waiting will write them.
+  notify();
 }
 
 // Pass null to close the editor

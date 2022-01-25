@@ -44,6 +44,18 @@ export function loadNotes() {
   }
 }
 
+// Call `callback(notes)` whenever ANOTHER tab saves the notes.
+// The "storage" event never fires in the tab that did the saving, only in
+// the others, so a tab can't end up reacting to its own saves.
+export function watchNotes(callback) {
+  window.addEventListener("storage", (event) => {
+    // event.key is null when all of localStorage was cleared
+    if (event.storageArea !== localStorage) return;
+    if (event.key !== STORAGE_KEY && event.key !== null) return;
+    callback(loadNotes());
+  });
+}
+
 // Returns true if the notes were saved, false if the browser refused
 // (for example when storage is full), so the UI can tell the user.
 export function saveNotes(notes) {

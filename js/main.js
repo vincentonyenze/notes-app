@@ -1,7 +1,7 @@
 // Entry point: the only script loaded by index.html.
 // It connects the pieces: storage -> notes store -> UI, and user events -> store.
 import { elements } from "./dom.js";
-import { loadNotes } from "./storage.js";
+import { loadNotes, watchNotes } from "./storage.js";
 import {
   subscribe,
   initNotes,
@@ -12,6 +12,7 @@ import {
   undoDelete,
   forgetDeleted,
   togglePin,
+  syncNotes,
   setSearchQuery,
   getState,
   getVisibleNotes,
@@ -149,6 +150,9 @@ document.addEventListener("visibilitychange", () => {
 });
 
 setInterval(refreshTimes, TIME_REFRESH_MS);
+
+// Keep this tab up to date when the notes change in another tab
+watchNotes(syncNotes);
 
 // Subscribe first, so loading the notes triggers the first render
 subscribe(render);
